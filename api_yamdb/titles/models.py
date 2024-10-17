@@ -33,6 +33,7 @@ class Title(models.Model):
     name = models.CharField('Название', max_length=256)
     description = models.TextField('Описание') 
     year = models.IntegerField('Год публикации')
+    rating = models.IntegerField('Рейтинг', default = 0)
     genre = models.ForeignKey( 
         Genre, 
         on_delete=models.CASCADE, 
