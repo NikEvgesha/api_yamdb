@@ -19,7 +19,7 @@ class Category(NameAndSlug):
         return self.name[:30] 
 
 
-class Genres(NameAndSlug):
+class Genre(NameAndSlug):
     class Meta: 
         verbose_name = 'жанр' 
         verbose_name_plural = 'Жанры'
@@ -29,12 +29,12 @@ class Genres(NameAndSlug):
 
  
 
-class Titles(models.Model): 
+class Title(models.Model): 
     name = models.CharField('Название', max_length=256)
     description = models.TextField('Описание') 
     year = models.IntegerField('Год публикации')
     genre = models.ForeignKey( 
-        Genres, 
+        Genre, 
         on_delete=models.CASCADE, 
         verbose_name='Жанр публикации', 
         related_name='titles'
