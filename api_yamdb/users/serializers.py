@@ -1,6 +1,5 @@
-from rest_framework import serializers
 from django.shortcuts import get_object_or_404
-# from rest_framework.validators import UniqueValidator
+from rest_framework import serializers
 
 from users.models import User
 
@@ -9,7 +8,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = [
-            'confirmation_code',
             'username',
             'email',
             'first_name',
@@ -19,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
     def validate(self, data):
-        if data['username'] == 'me':
+        if data.get('username') == 'me':
             raise serializers.ValidationError(
                 'Выберите другое имя пользователя!')
         return data
@@ -36,15 +34,12 @@ class UserMeSerializer(serializers.ModelSerializer):
             'last_name',
             'bio',
             'role']
+        read_only_fields = (
+            "role",
+        )
 
 
 class UserSignupSerializer(serializers.ModelSerializer):
-    # username = serializers.SlugField(
-    #     required=True,
-    #     validators=[UniqueValidator(queryset=User.objects.all())])
-    # email = serializers.EmailField(
-    #     required=True,
-    #     validators=[UniqueValidator(queryset=User.objects.all())])
 
     class Meta:
         model = User
