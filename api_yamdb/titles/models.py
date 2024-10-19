@@ -34,7 +34,7 @@ class Title(models.Model):
     description = models.TextField('Описание') 
     year = models.IntegerField('Год публикации')
     rating = models.IntegerField('Рейтинг', default = 0)
-    genre = models.ForeignKey( 
+    genre = models.ManyToManyField( 
         Genre, 
         on_delete=models.CASCADE, 
         verbose_name='Жанр публикации', 
