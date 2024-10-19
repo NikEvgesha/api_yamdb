@@ -37,6 +37,7 @@ class User(AbstractUser):
         blank=True,
         null=True
     )
+    password = None
 
     def __str__(self):
         return self.username
