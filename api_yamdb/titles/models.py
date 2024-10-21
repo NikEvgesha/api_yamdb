@@ -32,7 +32,7 @@ class Title(models.Model):
     name = models.CharField('Название', max_length=256)
     description = models.TextField('Описание')
     year = models.IntegerField('Год публикации')
-    rating = models.IntegerField('Рейтинг', default=0)
+    # rating = models.IntegerField('Рейтинг', default=0)
     genre = models.ManyToManyField(
         Genre,
         verbose_name='Жанр публикации',
@@ -50,3 +50,10 @@ class Title(models.Model):
         default_related_name = 'titles'
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
+
+    @property
+    def rating(self):
+        rewievs = self.rewievs.all()
+        if not rewievs.exists():
+            return None
+        return sum(rewievs.score for rewievs in rewievs) / rewievs.count()
