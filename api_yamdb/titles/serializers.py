@@ -26,7 +26,6 @@ class TitleSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(),
         slug_field='slug'
     )
-    # category = CategorySerializer()
 
     class Meta:
         model = Title

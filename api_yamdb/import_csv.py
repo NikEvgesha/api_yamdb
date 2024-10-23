@@ -69,46 +69,16 @@ with open('static/data/genre_title.csv', 'r') as f:
 
 # Для отзывов о комментариев без привязки к модели пользователя (просто id)
 
-with open('static/data/review.csv', 'r', encoding='utf-8') as f:
-    reader = csv.reader(f)
-    next(reader) 
-    for row in reader:
-        title_obj = Title.objects.get(id=row[1])
-        obj = Review.objects.get_or_create(
-            id=row[0],
-            title_id=title_obj.id,
-            text=row[2],
-            author=row[3],
-            score=row[4],
-            pub_date=row[5]
-        )
-
-with open('static/data/comments.csv', 'r', encoding='utf-8') as f:
-    reader = csv.reader(f)
-    next(reader) 
-    for row in reader:
-        review_obj = Review.objects.get(id=row[1])
-        obj = Comment.objects.get_or_create(
-            id=row[0],
-            review_id=review_obj.id,
-            text=row[2],
-            author=row[3],
-            pub_date=row[4]
-        )
-
-# Для отзывов о комментариев с привязкой к модели User
-
 # with open('static/data/review.csv', 'r', encoding='utf-8') as f:
 #     reader = csv.reader(f)
 #     next(reader) 
 #     for row in reader:
 #         title_obj = Title.objects.get(id=row[1])
-#         author_obj = User.objects.get(id=row[3])
 #         obj = Review.objects.get_or_create(
 #             id=row[0],
 #             title_id=title_obj.id,
 #             text=row[2],
-#             author=author_obj,
+#             author=row[3],
 #             score=row[4],
 #             pub_date=row[5]
 #         )
@@ -118,11 +88,41 @@ with open('static/data/comments.csv', 'r', encoding='utf-8') as f:
 #     next(reader) 
 #     for row in reader:
 #         review_obj = Review.objects.get(id=row[1])
-#         author_obj = User.objects.get(id=row[3])
 #         obj = Comment.objects.get_or_create(
 #             id=row[0],
 #             review_id=review_obj.id,
 #             text=row[2],
-#             author=author_obj,
+#             author=row[3],
 #             pub_date=row[4]
 #         )
+
+# Для отзывов о комментариев с привязкой к модели User
+
+with open('static/data/review.csv', 'r', encoding='utf-8') as f:
+    reader = csv.reader(f)
+    next(reader) 
+    for row in reader:
+        title_obj = Title.objects.get(id=row[1])
+        author_obj = User.objects.get(id=row[3])
+        obj = Review.objects.get_or_create(
+            id=row[0],
+            title_id=title_obj.id,
+            text=row[2],
+            author=author_obj,
+            score=row[4],
+            pub_date=row[5]
+        )
+
+with open('static/data/comments.csv', 'r', encoding='utf-8') as f:
+    reader = csv.reader(f)
+    next(reader) 
+    for row in reader:
+        review_obj = Review.objects.get(id=row[1])
+        author_obj = User.objects.get(id=row[3])
+        obj = Comment.objects.get_or_create(
+            id=row[0],
+            review_id=review_obj.id,
+            text=row[2],
+            author=author_obj,
+            pub_date=row[4]
+        )

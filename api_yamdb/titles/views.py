@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from titles.permissions import IsAdminOrSuperUser
 from rest_framework import filters
-# from django_filters.rest_framework import DjangoFilterBackend
 
 
 class CategoryAndGenreClass(viewsets.ModelViewSet):
@@ -44,8 +43,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().order_by('id')
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrSuperUser,)
-    # filter_backends = (DjangoFilterBackend,)
-    # filterset_fields = ('category__slug', 'genre__slug', 'year', 'name')
 
     def get_queryset(self):
         "Для фильтрации"
@@ -85,7 +82,7 @@ class TitleViewSet(viewsets.ModelViewSet):
             self.format_data(data)
             return self.get_paginated_response(data)
         serializer = self.get_serializer(queryset, many=True)
-        data = serializer.data 
+        data = serializer.data
         self.format_data(data)
         return Response(data)
 
