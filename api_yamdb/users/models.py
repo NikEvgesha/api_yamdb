@@ -13,9 +13,6 @@ class User(AbstractUser):
         (ADMIN, 'Администратор')
     ]
 
-    # username, first_name, last_name:
-    # ограничения из документации совпадают с базовой моделью
-
     email = models.EmailField(
         'Е-мейл',
         blank=False,

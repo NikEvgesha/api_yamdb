@@ -7,18 +7,17 @@ from django.db.models import Q
 from rest_framework import viewsets, status, mixins, generics, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import User
-from users.serializers import (
+from api.serializers import (
     UserSerializer,
     UserSignupSerializer,
     UserTokenSerializer,
     UserMeSerializer
 )
-from users.permissions import IsAdmin, IsSuperuser
+from api.permissions import IsAdmin, IsSuperuser
 from users.pagination import UserPagination
 
 
@@ -125,7 +124,7 @@ class GetToken(generics.CreateAPIView):
         if user.exists():
             serializer = UserTokenSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            return Response(get_token(user), status=status.HTTP_201_CREATED)
+            return Response(get_token(user[0]), status=status.HTTP_201_CREATED)
         return Response('Некорректные данные',
                         status=status.HTTP_404_NOT_FOUND)
 
