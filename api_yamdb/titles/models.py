@@ -53,7 +53,7 @@ class Title(models.Model):
 
     @property
     def rating(self):
-        rewievs = self.rewievs.all()
-        if not rewievs.exists():
+        reviews = self.reviews.all()
+        if not reviews.exists():
             return None
-        return sum(rewievs.score for rewievs in rewievs) / rewievs.count()
+        return sum(rewievs.score for rewievs in reviews) / reviews.count()
