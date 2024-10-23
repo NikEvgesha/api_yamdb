@@ -33,7 +33,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(url_path='me',
             detail=False,
-            permission_classes=[IsAuthenticated,],
+            permission_classes=[IsAuthenticated, ],
             methods=['GET', 'PATCH'])
     def me(self, request, *args, **kwargs):
         user = get_object_or_404(User, pk=request.user.id)
@@ -142,7 +142,7 @@ def send_confirmation_code(user):
         'YaMDB: Ваш код подтверждения',
         f'Код подтверждения: {user.confirmation_code}',
         'yamdb@yamdb.fake',
-        [user.email,],
+        [user.email, ],
         fail_silently=False
     )
 
