@@ -2,19 +2,23 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from titles.models import Title
+from users.models import User
 
 
 class Review(models.Model):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='rewievs',
+        related_name='reviews',
         verbose_name='Произведение',
     )
     text = models.TextField('Текст отзыва')
-    # Временно используем IntegerField для хранения ID пользователя
-    # пока не импортирована модель User
-    author = models.IntegerField('ID пользователя')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор'
+    )
     score = models.IntegerField(
         'Оценка',
         validators=[MinValueValidator(1), MaxValueValidator(10)]
@@ -36,9 +40,12 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Отзыв'
     )
-    # Временно используем IntegerField для хранения ID пользователя
-    # пока не импортирована модель User
-    author = models.IntegerField('ID пользователя')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Автор'
+    )
     text = models.TextField('Текст комментария')
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
@@ -48,3 +55,4 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Комментарий к {self.review}'
+
