@@ -29,12 +29,18 @@ class User(AbstractUser):
         'Биография',
         blank=True
     )
-    confirmation_code = models.TextField(
-        'Код подтверждения',
-        blank=True,
-        null=True
-    )
-    password = None
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
 
     def __str__(self):
         return self.username

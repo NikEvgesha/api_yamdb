@@ -4,11 +4,12 @@ from datetime import datetime
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from rest_framework import viewsets, status, mixins, generics, filters
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework import viewsets, status, generics, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 
 from users.models import User
 from api.serializers import (
@@ -17,7 +18,7 @@ from api.serializers import (
     UserTokenSerializer,
     UserMeSerializer
 )
-from api.permissions import IsAdmin, IsSuperuser
+from api.permissions import IsAdminOrSuperuser
 from users.pagination import UserPagination
 
 
@@ -25,7 +26,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
     lookup_field = 'username'
-    permission_classes = [IsAuthenticated, IsAdmin | IsSuperuser]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperuser]
     http_method_names = ['get', 'post', 'patch', 'delete']
     pagination_class = UserPagination
     filter_backends = (filters.SearchFilter,)
@@ -37,7 +38,7 @@ class UserViewSet(viewsets.ModelViewSet):
             methods=['GET', 'PATCH'])
     def me(self, request, *args, **kwargs):
         user = get_object_or_404(User, pk=request.user.id)
-        if request.method == "GET":
+        if request.method == 'GET':
             serializer = UserMeSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserMeSerializer(user, data=request.data, partial=True)
@@ -45,25 +46,6 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response('Неверные данные', status=status.HTTP_400_BAD_REQUEST)
-
-
-class RetrieveUpdateViewSet(
-    mixins.UpdateModelMixin,
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet
-):
-    pass
-
-
-class CreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    pass
-
-
-class RetrieveUpdateViewSet(
-        mixins.RetrieveModelMixin,
-        mixins.UpdateModelMixin,
-        viewsets.GenericViewSet):
-    pass
 
 
 class UserSignup(generics.CreateAPIView):
@@ -76,11 +58,8 @@ class UserSignup(generics.CreateAPIView):
 
         user = User.objects.filter(username=username, email=email)
         if user.exists():
-            user = user[0]
-            confirmation_code = generate_confirmation_code(username)
-            user.confirmation_code = confirmation_code
-            user.save()
-            send_confirmation_code(user)
+            token = default_token_generator.make_token(user[0])
+            send_confirmation_code(user[0], token)
             return Response(
                 request.data,
                 status=status.HTTP_200_OK
@@ -98,11 +77,8 @@ class UserSignup(generics.CreateAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             serializer.save()
-            user = get_object_or_404(User, username=username)
-            confirmation_code = generate_confirmation_code(username)
-            user.confirmation_code = confirmation_code
-            user.save()
-            send_confirmation_code(user)
+            token = default_token_generator.make_token(user[0])
+            send_confirmation_code(user[0], token)
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
@@ -137,10 +113,10 @@ def generate_confirmation_code(username):
     return code
 
 
-def send_confirmation_code(user):
+def send_confirmation_code(user, confirmation_code):
     send_mail(
         'YaMDB: Ваш код подтверждения',
-        f'Код подтверждения: {user.confirmation_code}',
+        f'Код подтверждения: {confirmation_code}',
         'yamdb@yamdb.fake',
         [user.email, ],
         fail_silently=False
@@ -148,8 +124,7 @@ def send_confirmation_code(user):
 
 
 def get_token(user):
-    refresh = RefreshToken.for_user(user)
+    token = AccessToken.for_user(user)
     return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
+        'access': str(token)
     }
