@@ -1,8 +1,8 @@
-from rest_framework import serializers
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework import serializers
 
-from reviews.models import Review, Comment
-from titles.models import Category, Genre, Title
+from reviews.models import Review, Comment, Category, Genre, Title
 from users.models import User
 
 
@@ -12,7 +12,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ['id', 'text', 'author', 'score', 'pub_date']
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate(self, data):
         if self.context['request'].method == 'POST':
@@ -29,61 +29,79 @@ class ReviewSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username', read_only=True)
-    read_only_fields = ('review',)
 
     class Meta:
         model = Comment
-        fields = ['id', 'author', 'text', 'pub_date']
+        fields = ('id', 'author', 'text', 'pub_date')
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('name', 'slug',)
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = ('name', 'slug',)
+        fields = ('name', 'slug')
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+class TitleDetailSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'category',
+            'genre',
+        )
+
+
+class TitleCreateSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
     genre = serializers.SlugRelatedField(
         many=True,
-        queryset=Genre.objects.all(),
-        slug_field='slug'
-    )
-    category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(),
-        slug_field='slug'
+        slug_field='slug',
+        queryset=Genre.objects.all()
     )
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'description',
-                  'year', 'rating', 'genre',
-                  'category',)
-
-    def get_rating(self, obj):
-        return obj.rating
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'category',
+            'genre',
+        )
 
 
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = [
+        fields = (
             'username',
             'email',
             'first_name',
             'last_name',
             'bio',
-            'role']
+            'role')
         model = User
 
-    def validate(self, data):
-        if data.get('username') == 'me':
+    def validate_username(self, data):
+        if data.lower() == 'me':
             raise serializers.ValidationError(
                 'Выберите другое имя пользователя!')
         return data
@@ -93,15 +111,15 @@ class UserMeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
+        fields = (
             'username',
             'email',
             'first_name',
             'last_name',
             'bio',
-            'role']
+            'role')
         read_only_fields = (
-            "role",
+            'role',
         )
 
 
@@ -109,11 +127,10 @@ class UserSignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email']
+        fields = ('username', 'email')
 
-    def validate(self, data):
-
-        if data['username'] == 'me':
+    def validate_username(self, data):
+        if data.lower() == 'me':
             raise serializers.ValidationError(
                 'Выберите другое имя пользователя!')
         return data
@@ -125,11 +142,13 @@ class UserTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'confirmation_code']
+        fields = ('username', 'confirmation_code')
 
     def validate(self, data):
         user = get_object_or_404(User, username=data['username'])
-        if data['confirmation_code'] != user.confirmation_code:
+        if not default_token_generator.check_token(
+                user,
+                data['confirmation_code']):
             raise serializers.ValidationError(
                 'Неверный код подтверждения')
         return data
