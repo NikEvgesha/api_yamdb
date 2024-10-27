@@ -32,8 +32,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
-    @action(url_path='me',
-            detail=False,
+    @action(detail=False,
             permission_classes=[IsAuthenticated, ],
             methods=['GET', 'PATCH'])
     def me(self, request, *args, **kwargs):
@@ -64,21 +63,20 @@ class UserSignup(generics.CreateAPIView):
                 request.data,
                 status=status.HTTP_200_OK
             )
-        else:
-            serializer = UserSignupSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user_duplicates = User.objects.filter(
-                Q(username=username)
-                | Q(email=email)
+        serializer = UserSignupSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user_duplicates = User.objects.filter(
+            Q(username=username)
+            | Q(email=email)
+        )
+        if user_duplicates.exists():
+            return Response(
+                'Имя пользователя или е-мейл уже используются',
+                status=status.HTTP_400_BAD_REQUEST
             )
-            if user_duplicates.exists():
-                return Response(
-                    'Неверные данные',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            serializer.save()
-            token = default_token_generator.make_token(user[0])
-            send_confirmation_code(user[0], token)
+        serializer.save()
+        token = default_token_generator.make_token(user[0])
+        send_confirmation_code(user[0], token)
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
@@ -92,10 +90,8 @@ class GetToken(generics.CreateAPIView):
     def post(self, request):
         username = request.data.get('username')
         confirmation_code = request.data.get('confirmation_code')
-        if not username or not confirmation_code:
-            return Response(
-                'Поля username и confirmation_code являются обязательными!',
-                status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         user = User.objects.filter(username=username)
         if user.exists():
             serializer = UserTokenSerializer(data=request.data)
@@ -103,14 +99,6 @@ class GetToken(generics.CreateAPIView):
             return Response(get_token(user[0]), status=status.HTTP_201_CREATED)
         return Response('Некорректные данные',
                         status=status.HTTP_404_NOT_FOUND)
-
-
-def generate_confirmation_code(username):
-    timestamp = datetime.now().timestamp()
-    fields = (username, str(timestamp))
-    data = ''.join(fields).encode('utf-8')
-    code = hashlib.sha256(data).hexdigest()
-    return code
 
 
 def send_confirmation_code(user, confirmation_code):
