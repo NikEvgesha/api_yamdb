@@ -1,6 +1,3 @@
-import hashlib
-from datetime import datetime
-
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -89,7 +86,6 @@ class GetToken(generics.CreateAPIView):
 
     def post(self, request):
         username = request.data.get('username')
-        confirmation_code = request.data.get('confirmation_code')
         serializer = UserTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = User.objects.filter(username=username)
