@@ -136,7 +136,7 @@ class UserSignupSerializer(serializers.ModelSerializer):
         return data
 
 
-class UserTokenSerializer(serializers.ModelSerializer):
+class UserTokenSerializer(serializers.Serializer):
     username = serializers.SlugField(required=True)
     confirmation_code = serializers.SlugField(required=True)
 
